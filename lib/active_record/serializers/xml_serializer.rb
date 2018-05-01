@@ -175,6 +175,11 @@ module ActiveRecord #:nodoc:
     def to_xml(options = {}, &block)
       XmlSerializer.new(self, options).serialize(&block)
     end
+
+    def from_xml(xml)
+      self.attributes = Hash.from_xml(xml).values.first
+      self
+    end
   end
 
   class XmlSerializer < ActiveModel::Serializers::Xml::Serializer #:nodoc:
