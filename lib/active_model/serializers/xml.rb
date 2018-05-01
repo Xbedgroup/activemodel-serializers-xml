@@ -82,7 +82,7 @@ module ActiveModel
           options[:builder] ||= ::Builder::XmlMarkup.new(indent: options[:indent])
 
           @builder = options[:builder]
-          @builder.instruct! unless options[:skip_instruct]
+          @builder.instruct!(:xml, version: @serializable.class.xml_version, encoding: @serializable.class.xml_encoding) unless options[:skip_instruct]
 
           root = (options[:root] || @serializable.model_name.element).to_s
           root = ActiveSupport::XmlMini.rename_key(root, options)
@@ -90,6 +90,7 @@ module ActiveModel
           args = [root]
           args << { xmlns: options[:namespace] } if options[:namespace]
           args << { type: options[:type] } if options[:type] && !options[:skip_types]
+          args << add_to_xml_attributes
 
           @builder.tag!(*args) do
             add_attributes_and_methods
@@ -102,11 +103,17 @@ module ActiveModel
 
       private
 
+        def add_to_xml_attributes
+          serializable_hash.slice(*@serializable.class.xml_attributes.map(&:to_s)).compact
+        end
+
         def add_extra_behavior
         end
 
         def add_attributes_and_methods
+          xml_attributes = @serializable.class.xml_attributes.map(&:to_s)
           serializable_collection.each do |attribute|
+            next if xml_attributes.include? attribute.name || attribute.name.downcase.start_with?('xmlns')
             _options = options.except(:methods)
             key = ActiveSupport::XmlMini.rename_key(attribute.name, _options)
             ActiveSupport::XmlMini.to_tag(key, attribute.value,

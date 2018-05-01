@@ -21,3 +21,37 @@ module ActiveModel
     ActiveModel::Serializers.eager_load!
   end
 end
+
+module ActiveRecord
+  module ModelSchema
+    extend ActiveSupport::Concern
+
+    class_methods do
+      def xml_version
+        @xml_version ||= '1.0'
+      end
+
+      def xml_version=(value)
+        value = value&.to_s
+        @xml_version = value
+      end
+
+      def xml_encoding
+        @xml_encoding ||= 'UTF-8'
+      end
+
+      def xml_encoding=(value)
+        value = value&.to_s
+        @xml_encoding = value
+      end
+
+      def xml_attributes(*attributes)
+        if attributes.present?
+          @xml_attributes ||= attributes
+        else
+          @xml_attributes || {}
+        end
+      end
+    end
+  end
+end
